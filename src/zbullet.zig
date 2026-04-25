@@ -31,11 +31,11 @@ const SizeAndAlignment = packed struct(u64) {
 };
 var mem_allocator: ?std.mem.Allocator = null;
 var mem_allocations: ?std.AutoHashMap(usize, SizeAndAlignment) = null;
-var mem_mutex: std.Thread.Mutex = .{};
+var mem_mutex: std.Io.Mutex = .init;
 
 export fn zbulletAlloc(size: usize, alignment: i32) callconv(.c) ?*anyopaque {
-    mem_mutex.lock();
-    defer mem_mutex.unlock();
+    std.Io.Threaded.mutexLock(&mem_mutex);
+    defer std.Io.Threaded.mutexUnlock(&mem_mutex);
 
     const ptr = mem_allocator.?.rawAlloc(
         size,
@@ -54,8 +54,8 @@ export fn zbulletAlloc(size: usize, alignment: i32) callconv(.c) ?*anyopaque {
 
 export fn zbulletFree(maybe_ptr: ?*anyopaque) callconv(.c) void {
     if (maybe_ptr) |ptr| {
-        mem_mutex.lock();
-        defer mem_mutex.unlock();
+        std.Io.Threaded.mutexLock(&mem_mutex);
+        defer std.Io.Threaded.mutexUnlock(&mem_mutex);
 
         const info = mem_allocations.?.fetchRemove(@intFromPtr(ptr)).?.value;
 
@@ -1283,7 +1283,7 @@ pub const DebugDrawer = struct {
 };
 
 test {
-    std.testing.refAllDeclsRecursive(@This());
+    std.testing.refAllDecls(@This());
 }
 
 test "zbullet.world.gravity" {
