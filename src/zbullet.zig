@@ -1493,7 +1493,7 @@ test "zbullet.shape.trimesh" {
     defer deinit();
     const trimesh = initTriangleMeshShape();
     const triangles = [3]u32{ 0, 1, 2 };
-    const vertices = [_]f32{0.0} ** 9;
+    const vertices: [9]f32 = @splat(0);
     trimesh.addIndexVertexArray(
         1, // num_triangles
         &triangles, // triangles_base
